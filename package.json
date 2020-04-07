@@ -10,13 +10,18 @@
     "lint": "eslint ."
   },
   "dependencies": {
+    "@react-native-community/async-storage": "^1.9.0",
     "@react-native-community/masked-view": "^0.1.7",
+    "axios": "^0.19.2",
     "react": "16.11.0",
-    "react-native": "0.62.0",
+    "react-native": "0.62.1",
+    "react-native-file-type": "0.0.8",
     "react-native-gesture-handler": "^1.6.1",
+    "react-native-image-picker": "^2.3.1",
     "react-native-safe-area-context": "^0.7.3",
     "react-native-screens": "^2.4.0",
     "react-native-vector-icons": "^6.6.0",
+    "react-native-video": "^4.4.5",
     "react-navigation": "^4.3.5",
     "react-navigation-stack": "^2.3.9"
   },

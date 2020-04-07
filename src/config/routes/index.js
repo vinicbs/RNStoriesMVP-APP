@@ -1,13 +1,15 @@
 import { createAppContainer } from 'react-navigation'
 import { createStackNavigator } from 'react-navigation-stack'
-import StartScreen from 'src/screens/Start';
-import HomeScreen from 'src/screens/Home';
-import LoginScreen from 'src/screens/Login';
+import StartScreen from '../../screens/Auth';
+import HomeScreen from '../../screens/Home';
+import LoginScreen from '../../screens/Auth/Login';
+import RegisterScreen from '../../screens/Auth/Register';
 
 export const ROUTES = {
 	RootMain: "RootMain",
 	StartScreen: "StartScreen",
 	LoginScreen: "LoginScreen",
+	RegisterScreen: "RegisterScreen",
 	HomeScreen: "HomeScreen"
 }
 
@@ -17,6 +19,9 @@ const MainStack = createStackNavigator({
 	},
 	[ROUTES.LoginScreen]: {
 		screen: LoginScreen
+	},
+	[ROUTES.RegisterScreen]: {
+		screen: RegisterScreen
 	},
 	[ROUTES.HomeScreen]: {
 		screen: HomeScreen
