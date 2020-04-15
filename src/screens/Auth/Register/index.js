@@ -9,14 +9,15 @@ import {
     NavigationScreenProp,
     NavigationStackScreenOptions
 } from "react-navigation";
+// import fileType from 'react-native-file-type';
+import ImagePicker from 'react-native-image-picker';
 import Colors from "../../../utils/styles/Colors";
 import { ROUTES } from "../../../config/routes";
 import { CommonStyles, WIDTH, HEIGHT } from "../../../utils/styles/CommonStyles";
 import Client from "../../../services/Client";
 import defaultAvatar from '../../../assets/images/default-avatar.png'
-import ImagePicker from 'react-native-image-picker';
 import { requestCameraPermission } from '../../../utils/permissionsAndroid'
-import { register } from "../../../services/auth";
+import { register, uploadPhoto } from "../../../services/auth";
 import { registerErrors } from "../../../utils/errorHandling";
 
 /**
@@ -41,6 +42,7 @@ export default class RegisterScreen extends React.Component {
     constructor(props) {
         super(props)
         this.state = {
+            id: 0,
             name: '',
             email: '',
             password: '',
@@ -63,28 +65,18 @@ export default class RegisterScreen extends React.Component {
             } else {
                 await requestCameraPermission();
                 this.setState({ loading: true }, async () => {
-                    let image = new FormData();
-                    let fileName = response.fileName.replace(/[^a-zA-Z0-9\.]/g, "").replace(/ /g, '');
                     let imageType = response.type;
                     try {
-                        if (!imageType) {
-                            let fileTypeCheck = await fileType(response.path)
-                            imageType = fileTypeCheck.mime;
-                        }
-                        image.append('image', { uri: response.uri, name: fileName, type: imageType });
-
-                        let responseImage = await ApiYo.imageUpload(image);
-                        console.log(responseImage);
-                        const imageUrl = responseImage.link;
-
+                        // if (!imageType) {
+                        //     let fileTypeCheck = await fileType(response.path)
+                        //     imageType = fileTypeCheck.mime;
+                        // }
+                        let uploadResult = await uploadPhoto(response.uri, imageType, this.state.id)
+                        this.setState({ photo: uploadResult.data }, () => this.setState({ loading: false }));
                     } catch (err) {
-                        console.error(err);
-                        this.setState({ loadingPhoto: false });
+                        Alert.alert('Aviso', 'Erro ao subir foto');
+                        this.setState({ loading: false });
                     }
-                });
-                const source = { uri: response.uri };
-                this.setState({
-                    avatarSource: source,
                 });
             }
         });
@@ -101,14 +93,14 @@ export default class RegisterScreen extends React.Component {
                 return this.setState({ loading: false });
             } else {
                 try {
-                    let registerResponse = await register({ email, name, password });
+                    let registerResponse = await register({ email, name, password, photo: '' });
                     if (registerResponse.success) {
-                        await Client.setTokenInHeader(token);
-                        await AsyncStorage.setItem('userId', id.toString());
-                        await AsyncStorage.setItem('userEmail', email);
-                        await AsyncStorage.setItem('username', name);
-                        await AsyncStorage.setItem('userPhoto', photo);
-                        this.setState({ registered: true });
+                        await Client.setTokenInHeader(registerResponse.data.token);
+                        await AsyncStorage.setItem('userId', registerResponse.data.id.toString());
+                        await AsyncStorage.setItem('userEmail', registerResponse.data.email);
+                        await AsyncStorage.setItem('userName', registerResponse.data.name);
+                        await AsyncStorage.setItem('userPhoto', registerResponse.data.photo);
+                        this.setState({ registered: true, loading: false, id: registerResponse.data.id });
                     } else {
                         Alert.alert('Aviso', 'Erro de servidor! Tente novamente mais tarde.');
                         return this.setState({ loading: false });
@@ -134,9 +126,18 @@ export default class RegisterScreen extends React.Component {
                 {this.state.loading ?
                     <ActivityIndicator animating={true} size='large' color={'black'} /> :
                     this.state.registered ?
-                        <TouchableOpacity style={[styles.avatar, {}]} onPress={() => this.handlePhotoChange()}>
-                            <Image source={defaultAvatar} resizeMode='center' style={{ width: 150, height: 150, borderRadius: 100 }} />
-                        </TouchableOpacity> :
+                        <React.Fragment>
+                            <View>
+                                <Text style={{ fontSize: 16 }}> Trocar foto de perfil</Text>
+                                <TouchableOpacity style={[styles.avatar, {}]} onPress={() => this.handlePhotoChange()}>
+                                    <Image source={this.state.photo ? { uri: this.state.photo } : defaultAvatar} resizeMode='center' style={{ width: 150, height: 150, borderRadius: 150 }} />
+                                </TouchableOpacity>
+                            </View>
+                            <TouchableOpacity style={CommonStyles.button} onPress={() => this.props.navigation.navigate(ROUTES.HomeScreen)}>
+                                <Text style={{ fontSize: 20 }}>Continuar</Text>
+                            </TouchableOpacity>
+                        </React.Fragment>
+                        :
                         <React.Fragment>
                             <View style={styles.inputContainer}>
                                 <TextInput

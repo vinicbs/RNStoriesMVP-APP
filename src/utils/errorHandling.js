@@ -3,8 +3,8 @@ export const registerErrors = (err) => {
         case 'UniqueViolationError':
             return 'Email ja cadastrado';
         case 'Body parameters not fulfilled.':
-            console.log('errorrrrr')
-            if (err.moreInfo.errors && err.moreInfo.errors.length > 1) {
+            if (err.moreInfo.errors && err.moreInfo.errors.length > 0) {
+                console.log('debug 2')
                 let param = '';
                 let msg = '';
                 switch (err.moreInfo.errors[0].param) {
@@ -18,7 +18,7 @@ export const registerErrors = (err) => {
                         param = 'Parametro '
                         break;
                 }
-                switch (err.errors[0].msg) {
+                switch (err.moreInfo.errors[0].msg) {
                     case 'Invalid value':
                         msg = 'inválido(a)'
                         break;

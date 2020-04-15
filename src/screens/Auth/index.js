@@ -43,7 +43,7 @@ export default class StartScreen extends React.Component {
         this.setState({ loading: true }, async () => {
             let authToken = await Client.getUserToken();
             if (authToken) {
-                await Client.setTokenInHeader(authToken)
+                await Client.setTokenInHeader(authToken);
                 try {
                     let refreshResponse = await refreshToken(authToken);
                     const { id, email, name, photo, token } = refreshResponse.data;
@@ -51,7 +51,7 @@ export default class StartScreen extends React.Component {
                     await AsyncStorage.setItem('userId', id.toString());
                     await AsyncStorage.setItem('userEmail', email);
                     await AsyncStorage.setItem('username', name);
-                    await AsyncStorage.setItem('userPhoto', photo);
+                    await AsyncStorage.setItem('userPhoto', photo ? photo : '');
                     return this.setState({ loading: false }, () => this.props.navigation.navigate(ROUTES.HomeScreen));
                 } catch (err) {
                     return this.setState({ loading: false });

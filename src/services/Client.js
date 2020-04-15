@@ -1,9 +1,10 @@
 import axios from 'axios';
 import AsyncStorage from '@react-native-community/async-storage';
+import { API_URL } from 'react-native-dotenv'
 
 class Client {
     constructor() {
-        let baseUrl = 'https://242345a2.ngrok.io';
+        let baseUrl = API_URL;
 
         this.api = axios.create({
             baseURL: baseUrl,
@@ -23,6 +24,7 @@ class Client {
                 }
             },
             error => {
+                console.log(error)
                 return Promise.reject(error.response.data);
             }
         );
@@ -63,6 +65,15 @@ class Client {
         await AsyncStorage.removeItem('userPhoto');
 
         this.api.defaults.headers.common['x-access-token'] = '';
+    }
+
+    uploadPhoto(media) {
+        const config = {
+            headers: {
+                'Content-Type': 'multipart/form-data'
+            }
+        }
+        return this.api.post(`/auth/upload/`, media);
     }
 }
 
