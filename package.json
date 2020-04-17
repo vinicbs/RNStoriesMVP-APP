@@ -17,6 +17,7 @@
     "react": "16.11.0",
     "react-native": "0.62.2",
     "react-native-file-type": "0.0.8",
+    "react-native-fs": "^2.16.6",
     "react-native-gesture-handler": "^1.6.1",
     "react-native-image-picker": "^2.3.1",
     "react-native-modal": "^11.5.6",
@@ -25,6 +26,7 @@
     "react-native-vector-icons": "^6.6.0",
     "react-native-video": "^4.4.5",
     "react-native-video-player": "^0.10.0",
+    "react-native-video-processing": "^1.20.0",
     "react-navigation": "^4.3.5",
     "react-navigation-stack": "^2.3.9",
     "rn-fetch-blob": "^0.12.0"

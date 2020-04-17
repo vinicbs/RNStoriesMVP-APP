@@ -29,12 +29,31 @@ export default class StoriesPlayer extends React.Component {
             name: this.props.item.name,
             photo: this.props.item.photo,
             videos: [
-                "http://techslides.com/demos/sample-videos/small.mp4",
-                "https://www.radiantmediaplayer.com/media/bbb-360p.mp4"
+                "http://techslides.com/demos/sample-videos/small.mp4"
             ],
 
             videoIndex: 0,
             loading: false,
+        }
+    }
+
+    componentDidUpdate() {
+        console.log('oiss');
+        this.updateUser();
+    }
+
+    updateUser() {
+        if (this.state.id !== this.props.item.id) {
+            this.setState({
+                id: this.props.item.id,
+                name: this.props.item.name,
+                photo: this.props.item.photo,
+                videos: [
+                    "http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4"
+                ],
+                videoIndex: 0,
+                loading: false
+            })
         }
     }
 
@@ -43,10 +62,9 @@ export default class StoriesPlayer extends React.Component {
         console.log(videoIndex)
         console.log(videos.length)
         console.log('----------')
-        if (videoIndex >= (videos.length - 1)) {
+        if (videoIndex === (videos.length - 1)) {
             this.props.userStoriesEnded();
         } else {
-            console.log('oi')
             this.setState({ videoIndex: videoIndex + 1 })
         }
     }
@@ -58,7 +76,7 @@ export default class StoriesPlayer extends React.Component {
                     <View style={styles.avatarContainer}>
                         <Image source={this.state.photo ? { uri: this.state.photo } : defaultAvatar} resizeMode='center' style={styles.avatar} />
                     </View>
-                    <Text style={styles.text}>{this.state.name}</Text>
+                    <Text style={styles.text}>{this.state.name} {this.state.id}</Text>
                     <View></View>
                 </View>
                 <Video source={{ uri: this.state.videos[this.state.videoIndex] }}

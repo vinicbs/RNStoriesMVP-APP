@@ -1,5 +1,5 @@
 import * as React from "react";
-import { StyleSheet, Text, View, TouchableOpacity, ScrollView, ActivityIndicator, FlatList } from "react-native";
+import { StyleSheet, Text, View, TouchableOpacity, ScrollView, ActivityIndicator, FlatList, Alert } from "react-native";
 import Icon from "react-native-vector-icons/MaterialCommunityIcons";
 import {
     NavigationScreenComponent,
@@ -8,15 +8,44 @@ import {
 } from "react-navigation";
 import { ROUTES } from '../../config/routes';
 import Client from "src/services/Client";
-import { storiesList } from "src/services/stories";
+import { storiesList, uploadStories } from "src/services/stories";
 import UserCard from 'src/components/Stories/UserCard'
 import { CommonStyles, WIDTH, HEIGHT } from "../../utils/styles/CommonStyles";
 import StoriesPlayer from "../../components/Stories/StoriesPlayer";
 import Modal from 'react-native-modal';
+import ImagePicker, { ImagePickerOptions } from 'react-native-image-picker';
+import { requestCameraPermission } from "../../utils/permissionsAndroid";
+import { ProcessingManager } from 'react-native-video-processing';
+import fileType from 'react-native-file-type';
 
 /**
  * The Home screen
  */
+const videoOptions = {
+    title: 'Selecionar foto',
+    cancelButtonTitle: 'Cancelar',
+    takePhotoButtonTitle: 'Tirar foto...',
+    chooseFromLibraryButtonTitle: 'Escolher da galeria...',
+    mediaType: 'video',
+    videoQuality: 'low',
+    durationLimit: 10,
+    storageOptions: {
+        skipBackup: true,
+        path: 'videos',
+    },
+};
+const imageOptions = {
+    title: 'Selecionar foto',
+    cancelButtonTitle: 'Cancelar',
+    takePhotoButtonTitle: 'Tirar foto...',
+    chooseFromLibraryButtonTitle: 'Escolher da galeria...',
+    mediaType: 'photo',
+    quality: 0.5,
+    storageOptions: {
+        skipBackup: true,
+        path: 'images',
+    },
+}
 export default class HomeScreen extends React.Component {
 
     static navigationOptions = ({ navigation, screenProps }) => ({
@@ -66,6 +95,13 @@ export default class HomeScreen extends React.Component {
 
     handleChangeSelectedUser = () => {
         let { selectedUser } = this.state;
+        console.log(selectedUser)
+        console.log('debug 1')
+        if (selectedUser === (storiesList.length - 1)) {
+            this.setState({ selectedUser: 0, isModalPlayerVisible: false })
+        } else {
+            this.setState({ selectedUser: selectedUser + 1 })
+        }
     }
 
     render() {
@@ -97,9 +133,15 @@ export default class HomeScreen extends React.Component {
                         />
                     }
                 </ScrollView>
-                <TouchableOpacity style={CommonStyles.button} onPress={() => this.handleLogout()}>
-                    <Text>Logout</Text>
-                </TouchableOpacity>
+                <View style={styles.buttonBox}>
+                    <TouchableOpacity style={[CommonStyles.button, { width: '40%' }]} onPress={() => this.handleAddPhoto()}>
+                        <Text>ADICIONAR FOTO</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity style={[CommonStyles.button, { width: '40%' }]} onPress={() => this.handleAddVideo()}>
+                        <Text>ADICIONAR VIDEO</Text>
+                    </TouchableOpacity>
+                </View>
+
                 <Modal isVisible={this.state.isModalPlayerVisible}
                     hideModalContentWhileAnimating={false}
                     style={{ alignItems: 'center', justifyContent: 'center', flex: 1, marginTop: HEIGHT * 0.2 }}
@@ -112,6 +154,75 @@ export default class HomeScreen extends React.Component {
                 </Modal>
             </View>
         )
+    }
+
+    handleAddVideo = () => {
+        ImagePicker.launchCamera(videoOptions, async (response) => {
+            if (response.didCancel) {
+                console.log('User cancelled image picker');
+            } else if (response.error) {
+                console.log('ImagePicker Error: ', response.error);
+            } else if (response.customButton) {
+                console.log('User tapped custom button: ', response.customButton);
+            } else {
+                await requestCameraPermission();
+                this.setState({ loading: true }, async () => {
+                    let imageType = response.type;
+                    try {
+                        if (!imageType) {
+                            let fileTypeCheck = await fileType(response.path)
+                            imageType = fileTypeCheck.mime;
+                        }
+                        const compressOptions = {
+                            width: 720,
+                            bitrateMultiplier: 3,
+                            minimumBitrate: 300000,
+                        };
+                        let t0 = Date.now()
+                        let newSource = await ProcessingManager.compress(response.path, compressOptions)
+                        let t1 = Date.now()
+                        console.log("Call to doSomething took " + (t1 - t0) + " milliseconds.")
+                        let uploadResult = await uploadStories(newSource.source, imageType)
+                        console.log(uploadResult)
+                        this.setState({ loading: false })
+                    } catch (err) {
+                        console.log(err)
+                        Alert.alert('Aviso', 'Erro ao subir foto');
+                        this.setState({ loading: false });
+                    }
+                });
+            }
+        });
+    }
+
+    handleAddPhoto = () => {
+        ImagePicker.launchCamera(imageOptions, async (response) => {
+            if (response.didCancel) {
+                console.log('User cancelled image picker');
+            } else if (response.error) {
+                console.log('ImagePicker Error: ', response.error);
+            } else if (response.customButton) {
+                console.log('User tapped custom button: ', response.customButton);
+            } else {
+                await requestCameraPermission();
+                this.setState({ loading: true }, async () => {
+                    let imageType = response.type;
+                    try {
+                        if (!imageType) {
+                            let fileTypeCheck = await fileType(response.path)
+                            imageType = fileTypeCheck.mime;
+                        }
+                        let uploadResult = await uploadStories(response.uri, imageType)
+                        console.log(uploadResult)
+                        this.setState({ loading: false })
+                    } catch (err) {
+                        console.log(err)
+                        Alert.alert('Aviso', 'Erro ao subir foto');
+                        this.setState({ loading: false });
+                    }
+                });
+            }
+        });
     }
 }
 const styles = StyleSheet.create({
@@ -130,5 +241,8 @@ const styles = StyleSheet.create({
         fontSize: 20,
         textAlign: "center",
         margin: 10
+    },
+    buttonBox: {
+        flexDirection: 'row'
     }
 });
