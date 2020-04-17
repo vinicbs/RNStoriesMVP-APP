@@ -182,7 +182,7 @@ export default class HomeScreen extends React.Component {
                         let newSource = await ProcessingManager.compress(response.path, compressOptions)
                         let t1 = Date.now()
                         console.log("Call to doSomething took " + (t1 - t0) + " milliseconds.")
-                        let uploadResult = await uploadStories(newSource.source, imageType)
+                        let uploadResult = await uploadStories(newSource.source, imageType, 'video')
                         console.log(uploadResult)
                         this.setState({ loading: false })
                     } catch (err) {
@@ -212,7 +212,7 @@ export default class HomeScreen extends React.Component {
                             let fileTypeCheck = await fileType(response.path)
                             imageType = fileTypeCheck.mime;
                         }
-                        let uploadResult = await uploadStories(response.uri, imageType)
+                        let uploadResult = await uploadStories(response.uri, imageType, 'image')
                         console.log(uploadResult)
                         this.setState({ loading: false })
                     } catch (err) {
