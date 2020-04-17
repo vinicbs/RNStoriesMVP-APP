@@ -74,6 +74,10 @@ export default class HomeScreen extends React.Component {
     }
 
     componentDidMount = async () => {
+        this.fetchUserStories();
+    }
+
+    fetchUserStories = async () => {
         this.setState({ loading: true }, async () => {
             try {
                 let storiesResult = await storiesList(this.state.page, 10);
@@ -95,12 +99,19 @@ export default class HomeScreen extends React.Component {
 
     handleChangeSelectedUser = () => {
         let { selectedUser } = this.state;
-        console.log(selectedUser)
-        console.log('debug 1')
         if (selectedUser === (storiesList.length - 1)) {
             this.setState({ selectedUser: 0, isModalPlayerVisible: false })
         } else {
             this.setState({ selectedUser: selectedUser + 1 })
+        }
+    }
+
+    handleGoBackSelectedUser = () => {
+        let { selectedUser } = this.state;
+        if (selectedUser === 0) {
+            this.setState({ selectedUser: 0, isModalPlayerVisible: false })
+        } else {
+            this.setState({ selectedUser: selectedUser - 1 })
         }
     }
 
@@ -110,7 +121,10 @@ export default class HomeScreen extends React.Component {
                 <Text style={styles.title}>Home Screen</Text>
                 <ScrollView style={styles.storiesContainer}>
                     {this.state.loading ?
-                        <ActivityIndicator animating={true} size='large' color={'black'} /> :
+                        <View style={{ flex: 1 }}>
+                            <ActivityIndicator animating={true} size='large' color={'black'} style={{}} />
+                        </View>
+                        :
                         <FlatList ref={'storiesList'}
                             data={this.state.usersStories}
                             extraData={this.state}
@@ -150,6 +164,7 @@ export default class HomeScreen extends React.Component {
                     <StoriesPlayer
                         item={this.state.usersStories[this.state.selectedUser]}
                         userStoriesEnded={this.handleChangeSelectedUser}
+                        userStoriesBack={this.handleGoBackSelectedUser}
                     />
                 </Modal>
             </View>
@@ -174,9 +189,9 @@ export default class HomeScreen extends React.Component {
                             imageType = fileTypeCheck.mime;
                         }
                         const compressOptions = {
-                            width: 720,
-                            bitrateMultiplier: 3,
-                            minimumBitrate: 300000,
+                            width: 480,
+                            bitrateMultiplier: 5,
+                            minimumBitrate: 8000,
                         };
                         let t0 = Date.now()
                         let newSource = await ProcessingManager.compress(response.path, compressOptions)
@@ -184,7 +199,7 @@ export default class HomeScreen extends React.Component {
                         console.log("Call to doSomething took " + (t1 - t0) + " milliseconds.")
                         let uploadResult = await uploadStories(newSource.source, imageType, 'video')
                         console.log(uploadResult)
-                        this.setState({ loading: false })
+                        this.setState({ loading: false }, () => this.fetchUserStories())
                     } catch (err) {
                         console.log(err)
                         Alert.alert('Aviso', 'Erro ao subir foto');
@@ -214,7 +229,7 @@ export default class HomeScreen extends React.Component {
                         }
                         let uploadResult = await uploadStories(response.uri, imageType, 'image')
                         console.log(uploadResult)
-                        this.setState({ loading: false })
+                        this.setState({ loading: false }, () => this.fetchUserStories())
                     } catch (err) {
                         console.log(err)
                         Alert.alert('Aviso', 'Erro ao subir foto');
